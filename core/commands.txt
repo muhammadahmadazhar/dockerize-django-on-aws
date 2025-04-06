@@ -1,0 +1,32 @@
+link1 : https://www.youtube.com/watch?v=W5Ov0H7E_o4&t=113s
+-------------------------------------------------------------
+FOR JUST BUILD DOCKER AS A SINGLE SERVICE
+
+FROM python:3.8-slim-buster
+
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+
+RUN pip3 install -r requirements.txt
+
+COPY . .
+
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+
+#this command only build docker image and pull necessory images from docker hub
+docker build --tag learn-docker .
+
+#this command maps the project running inside container port 8000 to our computer 8000
+docker run --publish 8000:8000 learn-docker
+
+
+link2 : https://www.youtube.com/watch?v=aMqs_y6dZw4&list=RDCMUC1mxuk7tuQT2D0qTMgKji3w&start_radio=1
+----------------------------------------------------------------------------------------------------
+
+docker-compose build
+docker-compose up
+
+
+link3 : https://www.youtube.com/watch?v=q75wgk9jVjA&list=RDCMUC1mxuk7tuQT2D0qTMgKji3w
+-------------------------------------------------------------------------------------

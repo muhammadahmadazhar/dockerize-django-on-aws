@@ -1,0 +1,121 @@
+#version: "3.8"
+services:
+
+#  redis:
+#    image: redis:alpine
+#    ports:
+#      - 6379:6379
+#    container_name: redis_container
+
+  db:
+    image: postgres:16
+    container_name: postgres_db_container
+    volumes:
+      - ./data/db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: always
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+#    volumes:
+#      - type: bind
+#        source: .
+#        target: /project_dir
+#        consistency: delegated
+    volumes:
+      - .:/project_dir
+      - static_files:/project_dir/staticfiles
+#      - .:/project_dir:cached
+#      - .:/project_dir:delegated consistent
+#      - .:/project_dir:consistent
+
+
+    ports:
+      - 8000:8000
+      - 5679:5679 #it is debugger port
+    image: app:project_dir # app will be image name and project_dir is tag
+    container_name: django_container
+#    command: python manage.py runserver 0.0.0.0:8000
+#    command: >
+#      sh -c "python manage.py migrate &&
+#             python manage.py runserver 0.0.0.0:8000"
+    command: >
+      sh -c "if [ ! -d '/project_dir/staticfiles' ]; then 
+               echo 'Collecting static files...' && 
+               python manage.py collectstatic --noinput; 
+             else 
+               echo 'Static files already collected. Skipping.'; 
+             fi &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+#    restart: always # in development it should tern off
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
+#      - redis
+#      - rabbitmq
+
+#  rabbitmq:
+#    image: rabbitmq:3-management  # Includes the management UI
+#    container_name: rabbitmq_container
+#    ports:
+#      - "5673:5672"   # AMQP protocol (used by Celery)
+#      - "15673:15672" # RabbitMQ management UI
+#    environment:
+#      - RABBITMQ_DEFAULT_USER=guest
+#      - RABBITMQ_DEFAULT_PASS=guest
+#    restart: always
+#
+#  celery:
+#    build:
+#      context: .
+#    container_name: celery_container
+#    command: celery -A core worker -l DEBUG --events
+#    volumes:
+#      - .:/project_dir
+#    depends_on:
+#      - db
+##      - redis
+#      - web
+#      - rabbitmq
+#
+#  flower:
+#    build:
+#      context: .
+#    container_name: flower_container
+##    command: celery -A core flower --port=5555
+#    command: celery -A core flower --port=5555 --basic_auth=guest:guest
+##    command: celery -A core flower --port=5555 --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+##    environment:
+##      - FLOWER_USER=guest
+##      - FLOWER_PASSWORD=guest
+#    volumes:
+#      - .:/project_dir
+#
+#
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      - rabbitmq
+#      - celery
+#
+
+
+  nginx:
+    build:
+      context: ./nginx/
+    container_name: nginx_container
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d
+      - static_files:/home/app/staticfiles
+
+volumes:
+  static_files:
