@@ -4,7 +4,7 @@ from newapp.tasks import calculate_sum
 
 def home(request):
     context = {
-        "message": "Welcome to My Django App! vdfdfd"
+        "message": "Welcome to My Django App!"
     }
     return render(request, "index.html", context)
 
