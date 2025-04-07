@@ -22,6 +22,6 @@ jobs:
           git checkout main
           git pull origin main
           docker-compose up -d --build
-#          sudo docker exec django_container python manage.py migrate
+          sudo docker exec django_container python manage.py migrate
           sudo docker image prune -a -f
           sudo docker builder prune -f
